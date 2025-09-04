@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  fantasy-football-mcp:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: fantasy-football-mcp
+    env_file: .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+      # Optional: Mount config directory if you have custom configs
+      # - ./config:/app/config
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add a development container with code mounting
+  fantasy-football-mcp-dev:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: fantasy-football-mcp-dev
+    env_file: .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DEVELOPMENT=true
+    volumes:
+      - .:/app  # Mount entire project for development
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    ports:
+      - "8001:8000"  # Different port for dev
+    restart: unless-stopped
+    profiles:
+      - dev  # Only start with --profile dev flag
+    command: /bin/bash -c "pip install -e . && python -m src.mcp_server"
