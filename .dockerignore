@@ -27,8 +27,12 @@ Thumbs.db
 .gitignore
 
 # Documentation
-*.md
-!README.md  # Exception: README.md is needed by pyproject.toml
+# Exclude all markdown files except README.md
+CONTRIBUTING.md
+INSTALLATION.md
+REDDIT_SETUP.md
+YAHOO_SETUP.md
+SECURITY.md
 docs/
 LICENSE
 
