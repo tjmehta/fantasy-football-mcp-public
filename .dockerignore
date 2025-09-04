@@ -28,6 +28,7 @@ Thumbs.db
 
 # Documentation
 *.md
+!README.md  # Exception: README.md is needed by pyproject.toml
 docs/
 LICENSE
 
