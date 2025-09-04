@@ -8,7 +8,8 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -17,40 +18,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Create a non-root user first
+RUN useradd -m -u 1000 appuser
 
-# Install Python dependencies
+# Copy requirements and install dependencies as root for better caching
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy pyproject.toml and setup files
-COPY pyproject.toml .
-COPY README.md .
+# Copy all application files
+COPY --chown=appuser:appuser pyproject.toml README.md ./
+COPY --chown=appuser:appuser src/ ./src/
+COPY --chown=appuser:appuser utils/ ./utils/
+COPY --chown=appuser:appuser config/ ./config/
+COPY --chown=appuser:appuser fantasy_football_multi_league.py lineup_optimizer.py matchup_analyzer.py ./
 
-# Copy application code
-COPY src/ src/
-COPY utils/ utils/
-COPY config/ config/
+# Create necessary directories with correct ownership
+RUN mkdir -p /app/logs /app/cache && \
+    chown -R appuser:appuser /app/logs /app/cache
 
-# Copy main scripts
-COPY fantasy_football_multi_league.py .
-COPY lineup_optimizer.py .
-COPY matchup_analyzer.py .
-
-# Create necessary directories for runtime
-RUN mkdir -p /app/logs /app/cache
-
-# Create a non-root user to run the application
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
+# Verify files were copied (for debugging)
+RUN echo "=== Listing /app contents ===" && \
+    ls -la /app/ && \
+    echo "=== Listing /app/src contents ===" && \
+    ls -la /app/src/ || echo "src directory not found"
 
 # Switch to non-root user
 USER appuser
 
-# Set Python path
-ENV PYTHONPATH=/app
-
-# Expose port if the MCP server needs it (adjust as needed)
+# Expose port if the MCP server needs it
 EXPOSE 8000
 
 # Default command to run the MCP server
