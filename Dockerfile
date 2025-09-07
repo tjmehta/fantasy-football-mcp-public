@@ -4,12 +4,26 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE=1 \
+# Set environment variables (mirroring .env.example defaults)
+ENV RUNTIME_ENVIRONMENT=docker \
+    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PYTHONPATH=/app
+    PYTHONPATH=/app \
+    CACHE_DIR=./.cache \
+    CACHE_TTL_SECONDS=3600 \
+    YAHOO_API_RATE_LIMIT=100 \
+    YAHOO_API_RATE_WINDOW_SECONDS=3600 \
+    LOG_LEVEL=INFO \
+    LOG_FILE=./logs/fantasy_football.log \
+    MCP_SERVER_NAME=fantasy-football \
+    MCP_SERVER_VERSION=1.0.0 \
+    MAX_WORKERS=10 \
+    ASYNC_TIMEOUT_SECONDS=30 \
+    ENABLE_ADVANCED_STATS=true \
+    ENABLE_WEATHER_DATA=true \
+    ENABLE_INJURY_REPORTS=true
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -32,9 +46,9 @@ COPY --chown=appuser:appuser utils/ ./utils/
 COPY --chown=appuser:appuser config/ ./config/
 COPY --chown=appuser:appuser fantasy_football_multi_league.py lineup_optimizer.py matchup_analyzer.py ./
 
-# Create necessary directories with correct ownership
-RUN mkdir -p /app/logs /app/cache && \
-    chown -R appuser:appuser /app/logs /app/cache
+# Create directories dynamically based on ENV variables
+RUN mkdir -p ${CACHE_DIR} $(dirname ${LOG_FILE}) && \
+    chown -R appuser:appuser ${CACHE_DIR} $(dirname ${LOG_FILE})
 
 # Verify files were copied (for debugging)
 RUN echo "=== Listing /app contents ===" && \
