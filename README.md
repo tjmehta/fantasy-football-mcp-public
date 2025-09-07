@@ -24,6 +24,8 @@ A Model Context Protocol (MCP) server for Yahoo Fantasy Football integration wit
 
 ### Installation
 
+#### Option 1: Traditional Installation
+
 1. Clone the repository:
 ```bash
 git clone https://github.com/derekrbreese/fantasy-football-mcp-public.git
@@ -45,6 +47,64 @@ pip install -r requirements.txt
 4. Configure Claude Desktop:
    - Add the MCP server configuration (see [INSTALLATION.md](INSTALLATION.md))
    - Restart Claude Desktop
+
+#### Option 2: Docker Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/derekrbreese/fantasy-football-mcp-public.git
+cd fantasy-football-mcp-public
+```
+
+2. Build the Docker image:
+```bash
+docker build -t fantasy-football-mcp:latest .
+```
+
+3. Run the container:
+```bash
+# Run with environment variables from .env file
+docker run -d \
+  --name fantasy-football-mcp \
+  --env-file .env \
+  -v $(pwd)/logs:/app/logs \
+  -v $(pwd)/cache:/app/cache \
+  -p 8000:8000 \
+  fantasy-football-mcp:latest
+```
+
+4. For interactive development:
+```bash
+# Run with volume mounts for code changes
+docker run -it \
+  --name fantasy-football-mcp-dev \
+  --env-file .env \
+  -v $(pwd):/app \
+  -p 8000:8000 \
+  fantasy-football-mcp:latest /bin/bash
+```
+
+5. Docker Compose (optional):
+Create a `docker-compose.yml` file:
+```yaml
+version: '3.8'
+services:
+  fantasy-football-mcp:
+    build: .
+    container_name: fantasy-football-mcp
+    env_file: .env
+    volumes:
+      - ./logs:/app/logs
+      - ./cache:/app/cache
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+```
+
+Then run:
+```bash
+docker-compose up -d
+```
 
 ## Available MCP Tools
 

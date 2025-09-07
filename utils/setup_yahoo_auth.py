@@ -67,7 +67,7 @@ try:
             game_id=449,  # 2025 NFL season
             yahoo_consumer_key=CLIENT_ID,
             yahoo_consumer_secret=CLIENT_SECRET,
-            browser_callback=True,  # Opens browser automatically
+            browser_callback=os.environ.get("RUNTIME_ENVIRONMENT", None) != "docker" and True,  # Opens browser automatically
             env_file_location=Path("."),  # Save token to current directory
             save_token_data_to_env_file=True  # Save for reuse
         )
@@ -103,7 +103,7 @@ try:
         except Exception as e:
             print(f"⚠️  Connection test failed: {e}")
             print("   But authentication may still be successful.")
-            
+
     except Exception as e:
         print(f"\n❌ Authentication failed: {e}")
         print()
